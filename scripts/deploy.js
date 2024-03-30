@@ -1,37 +1,60 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
-const config = require("../config.json");
+import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
+const web3 = require('@solana/web3.js');
+const connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
+const anchor = require("@project-serum/anchor");
+const { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } = anchor.web3;
 
 async function main() {
-    // Deploy aggregator contract
-    aggregator = await hre.ethers.deployContract("Aggregator",[
-        [
-          config.UNISWAP.V2_ROUTER_02_ADDRESS,
-          config.SUSHISWAP.V2_ROUTER_02_ADDRESS,
-       //   config.SMARTDEX.V2_ROUTER_02_ADDRESS
-        ],
-        2
-      ])
+    // Connect to the local cluster.
+    const provider = anchor.Provider.local();
+    anchor.setProvider(provider);
 
-    await aggregator.waitForDeployment()
+    // Create the program.
+    const program = anchor.workspace.Aggregator;
 
+    // Configure your contract parameters here.
+    const routers = [
+        new PublicKey("YOUR_ROUTER_ADDRESS_1"),
+        new PublicKey("YOUR_ROUTER_ADDRESS_2"),
+        // Add more routers if needed
+    ];
+    const defaultSlippagePercent = 2; // Example slippage percent value
 
-    const { chainId } = await ethers.provider.getNetwork()
+    // Deploy the program.
+    const aggregator = await program.state.rpc.initialize(
+        routers,
+        defaultSlippagePercent,
+        {
+            accounts: {
+                state: await program.state.create({
+                    accounts: {
+                        rent: SYSVAR_RENT_PUBKEY,
+                        systemProgram: SystemProgram.programId,
+                    },
+                }),
+                owner: provider.wallet.publicKey,
+                systemProgram: SystemProgram.programId,
+            },
+            signers: [provider.wallet.payer],
+            instructions: [],
+        }
+    );
 
-    console.log(`
-        Aggregator deployed to: ${aggregator.target}
-        on network chainID: ${chainId}
-        \n`)
-    }
+    console.log("Aggregator deployed to:", aggregator);
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-});
+    const payer = Keypair.generate();
+
+const connection = new Connection(
+  clusterApiUrl('devnet'),
+  'confirmed'
+);
+
+const airdropSignature = await connection.requestAirdrop(
+  payer.publicKey,
+  LAMPORTS_PER_SOL,
+);
+
+await connection.confirmTransaction(airdropSignature);
+}
+
+main().then(() => process.exit());

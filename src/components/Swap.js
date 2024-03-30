@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useConnection } from "@solana/wallet-adapter-react";
 import Dropdown from "react-bootstrap/Dropdown";
 import Spinner from "react-bootstrap/Spinner";
 import { ethers } from "ethers";
@@ -30,18 +31,13 @@ const Swap = () => {
   const [price, setPrice] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
 
-  const provider = useSelector((state) => state.provider.connection);
+  const connection = useConnection();
   const account = useSelector((state) => state.provider.account);
-  const isSwapping = useSelector(
-    (state) => state.aggregator.swapping.isSwapping
-  );
+  const isSwapping = useSelector((state) => state.aggregator.swapping.isSwapping);
   const isSuccess = useSelector((state) => state.aggregator.swapping.isSuccess);
-  const transactionHash = useSelector(
-    (state) => state.aggregator.swapping.transactionHash
-  );
+  const transactionHash = useSelector((state) => state.aggregator.swapping.transactionHash);
 
   const symbols = useSelector((state) => state.tokens.symbols);
-  // const balances = useSelector(state => state.tokens.balances)
   const dispatch = useDispatch();
 
   const connectHandler = async () => {
@@ -56,24 +52,11 @@ const Swap = () => {
       return;
     }
 
-    // const _inputAmount = ethers.parseUnits(inputAmount, 'ether')
-
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
     const slippage = 0;
 
-    console.log(
-      //contracts.aggregator,
-      provider,
-      path,
-      router,
-      inputAmount,
-      bestDeal,
-      slippage,
-      deadline
-    );
-
     await swap(
-      provider,
+      connection,
       contracts,
       path,
       router,
@@ -84,22 +67,10 @@ const Swap = () => {
       dispatch
     );
 
-    console.log(
-      //contracts.aggregator,
-      provider,
-      path,
-      router,
-      inputAmount,
-      bestDeal,
-      slippage,
-      deadline
-    );
-
     setShowAlert(true);
   };
 
   const getPrice = async () => {
-    console.log("getPrice/inputAmount", inputAmount);
     if (inputToken === outputToken) {
       setPrice(0);
     }
@@ -114,76 +85,41 @@ const Swap = () => {
     }
   };
 
-  // TODO: display network fee
-  // const getNetworkFee = async () => {
-  // }
-
   const handleTokenSelection = (type, token) => {
-    console.log("handleTokenSelection:type/token:", type, "/", token);
     if (type === "input") {
-      console.log(
-        "handleTokenSelection/setInputToken inputToken/outputToken",
-        inputToken,
-        outputToken
-      );
-
       setInputToken(token);
     } else {
-      console.log(
-        "handleTokenSelection/setOutputToken inputToken/outputToken",
-        inputToken,
-        outputToken
-      );
       setOutputToken(token);
     }
-    console.log(
-      "handleTokenSelection inputToken/outputToken",
-      inputToken,
-      outputToken
-    );
     if (inputToken && outputToken && inputToken !== outputToken) {
       setPath([symbols.get(inputToken), symbols.get(outputToken)]);
     }
     if (inputToken && outputToken && inputToken === outputToken) {
       setPath([]);
-      // You can also set a state for the alert message to give users more context
     }
   };
 
   const handleInputChange = async (e) => {
-    console.log("handleInputChange triggered"); // Log when the function is triggered
-
     if (!e.target.value) {
       setOutputAmount("0");
       setInputAmount("0");
-      console.log("No input value provided"); // Log if no input value is provided
       return;
     }
     const enteredAmount = ethers.parseEther(e.target.value.toString());
-    console.log("Entered amount:", enteredAmount.toString()); // Log the entered amount
 
-    // Set the input amount
     setInputAmount(enteredAmount.toString());
 
-    // Check to make sure the tokens are set before attempting to convert
     if (!inputToken || !outputToken) {
       alert("Please select both input and output tokens.");
-      console.log("Input or output token not selected"); // Log if tokens are not selected
       return;
     }
 
-    // Ensure the input token isn't the same as the output token
     if (inputToken === outputToken) {
       alert("Input and output tokens cannot be the same");
-      console.log("Input and output tokens are the same"); // Log if input and output tokens are the same
       return;
     }
-
-    // The logic for setting the path and fetching the best deal
-    // has been moved to useEffect hooks.
   };
 
-  // Effect to update the path whenever inputToken or outputToken changes
   useEffect(() => {
     if (inputToken && outputToken && inputToken !== outputToken) {
       setPath([symbols.get(inputToken), symbols.get(outputToken)]);
@@ -193,32 +129,18 @@ const Swap = () => {
     }
   }, [inputToken, outputToken, symbols]);
 
-  // Effect to call getBestAmountsOutOnUniswapForks whenever path or inputAmount changes
   useEffect(() => {
     const fetchBestDeal = async () => {
       if (path.length === 2 && inputAmount) {
-        // try {
-        const fetchBestDealResult =
-          await contracts.aggregator.getBestAmountsOutOnUniswapForks(
-            path,
-            inputAmount
-          );
-        console.log("fetchBestDealResult:", fetchBestDealResult);
+        const fetchBestDealResult = await contracts.aggregator.getBestAmountsOutOnUniswapForks(
+          path,
+          inputAmount
+        );
         setBestDeal(fetchBestDealResult[0]);
         setRouter(fetchBestDealResult[1]);
 
-        // Set the output amount
-        let calculatedOutputAmount = ethers.formatUnits(
-          fetchBestDealResult[0],
-          18
-        ); // Convert the result to a human-readable format
-        setOutputAmount(parseFloat(calculatedOutputAmount).toFixed(2)); // Update the outputAmount state
-
-        // } catch (error) {
-        //     console.error('Error fetching best deal:', error);
-        // }
-      } else {
-        console.log("path.length/inputAmout", path.length, inputAmount);
+        let calculatedOutputAmount = ethers.formatUnits(fetchBestDealResult[0], 18);
+        setOutputAmount(parseFloat(calculatedOutputAmount).toFixed(2));
       }
     };
     fetchBestDeal();
@@ -261,7 +183,7 @@ const Swap = () => {
             placeholder="0"
             min="0.0"
             value={outputAmount === 0 ? "" : outputAmount}
-            disabled={true} // to conditionally disable, replace true with condition
+            disabled={true}
           />
           <StyledDropdown
             onSelect={(token) => handleTokenSelection("output", token)}

@@ -1,52 +1,25 @@
-import { useSelector, useDispatch } from "react-redux";
-import Blockies from "react-blockies";
+import { useSelector } from "react-redux";
 import Navbar from "react-bootstrap/Navbar";
-import { Button } from "react-bootstrap";
 import Dropdown from "react-bootstrap/Dropdown";
-
+import Blockies from 'react-blockies';
+import {WalletConnectButton } from '@solana/wallet-adapter-react-ui';
 import styles from "../styles/Theme.module.css";
 import logo from "../img/logo.png";
-import localhostIcon from "../img/icons8-local-network-32.png";
-import sepoliaIcon from "../img/sepolia.png";
-import ethereumIcon from "../img/ethereum.png";
-
-import { loadAccount } from "../store/interactions";
+import solanaIcon from "../img/solana.png";
 import Tabs from "./Tabs";
+
 
 const Navigation = () => {
   const account = useSelector((state) => state.provider.account);
-  const chainId = useSelector((state) => state.provider.chainId);
-  const dispatch = useDispatch();
 
-  const connectHandler = async () => {
-    await loadAccount(dispatch);
-  };
 
   const networkHandler = async (e) => {
     console.log("networkHandler", e);
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: e }],
-    });
+    // Solana'da ağ değişimi işlemleri burada gerçekleştirilir.
+    // Örneğin, '@solana/web3.js' kullanarak yapılabilir.
   };
 
-  const getNetworkIcon = (chainId) => {
-    console.log("chainId", chainId);
-    switch (chainId) {
-      case "0x31337":
-        return localhostIcon;
-      case "0xaa36a7":
-        return sepoliaIcon;
-      case "0x1":
-        return ethereumIcon;
-      default:
-        return null;
-    }
-  };
-
-  const currentNetworkIcon = getNetworkIcon(
-    chainId ? `0x${chainId.toString(16)}` : `0`
-  );
+  const currentNetworkIcon = solanaIcon;
 
   return (
     <Navbar className={styles.customNavbar} expand="lg">
@@ -74,16 +47,7 @@ const Navigation = () => {
             )}
           </Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item eventKey="0x7A69">
-              <img src={localhostIcon} alt="Localhost Icon" width="20" />{" "}
-              Localhost
-            </Dropdown.Item>
-            {/* <Dropdown.Item eventKey="0xaa36a7">
-                      <img src={sepoliaIcon} alt="Sepolia Icon" width="20" /> Sepolia
-                  </Dropdown.Item> */}
-            <Dropdown.Item eventKey="0x1">
-              <img src={ethereumIcon} alt="Ethereum Icon" width="20" /> Ethereum
-            </Dropdown.Item>
+            {/* Solana ağ geçiş seçenekleri buraya eklenir */}
           </Dropdown.Menu>
         </Dropdown>
         {account ? (
@@ -100,9 +64,7 @@ const Navigation = () => {
             {account.slice(0, 6) + "..." + account.slice(38, 42)}
           </Navbar.Text>
         ) : (
-          <Button className={styles.connectBtn} onClick={connectHandler}>
-            Connect
-          </Button>
+          <WalletConnectButton className={styles.connectBtn} />
         )}
       </Navbar.Collapse>
     </Navbar>

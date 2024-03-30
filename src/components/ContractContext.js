@@ -1,69 +1,70 @@
-// ContractsContext.js
+/* eslint-disable no-undef */
 import React, { createContext, useCallback, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import { useDispatch } from 'react-redux'
+import { Connection, PublicKey } from '@solana/web3.js';
+import { useDispatch } from 'react-redux';
 
 import DAI_ABI from '../abis/Dai.json';
 import WETH_ABI from '../abis/Weth.json';
 import AGGREGATOR_ABI from '../abis/Aggregator.json';
 import config from '../config.json';
 
-
 import {
   loadProvider,
   loadNetwork,
   loadAccount,
-  loadTokens,
-//   fetchTokens,
-//   loadAggregator
-} from '../store/interactions'
-
+  loadTokens
+} from '../store/interactions';
 
 export const ContractsContext = createContext();
 
-export function ContractsProvider({ children })  {
-
+export function ContractsProvider({ children }) {
   const [contracts, setContracts] = useState({});
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
+  const fetchBlockchainData = useCallback(async () => {
+    try {
+      // Web3 bağlantısı oluştur
+      const connection = new Connection(config.solana.rpcUrl);
 
-  const fetchBlockChainData =  useCallback(async () => {
-    // Initiate provider
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    console.log('fetchBlockChainData/provider', provider)
-    loadProvider(provider, dispatch)
+      // Ağ kimliğini yükle
+      const network = await loadNetwork(connection, dispatch);
 
-    // Fetch current network's chainId (e.g. hardhat: 31337, kovan: 42)
-    const chainId = await loadNetwork(provider, dispatch)
+      // Hesap bilgilerini yükle
+      await loadAccount(connection, dispatch);
 
-    // Reload page when network changes
-    window.ethereum.on('chainChanged', () => {
-    window.location.reload()
-    })
+      // Akıllı sözleşmeleri yükle
+      const dai = new PublicKey(config.solana.tokens.dai);
+      const weth = new PublicKey(config.solana.tokens.weth);
+      const aggregator = new PublicKey(config.solana.contracts.aggregator);
 
-    // Fetch current account from Metamask when changed
-    window.ethereum.on('accountsChanged', async () => {
-    await loadAccount(dispatch)
-    })
+      const contractInstances = {
+        aggregator: new web3.PublicKey(config.solana.contracts.aggregator),
+        dai: new Token(connection, dai, TOKEN_PROGRAM_ID, null),
+        weth: new Token(connection, weth, TOKEN_PROGRAM_ID, null)
+      };
 
-    const contractInstances = {
-        aggregator: new ethers.Contract(config[chainId].aggregator.address, AGGREGATOR_ABI, provider),
-        dai: new ethers.Contract(config[chainId].weth.address, DAI_ABI, provider),
-        weth: new ethers.Contract(config[chainId].dai.address, WETH_ABI, provider)
+      await loadTokens(
+        [contractInstances.dai, contractInstances.weth],
+        dispatch
+      );
+
+      return contractInstances;
+    } catch (error) {
+      console.error('Error fetching blockchain data:', error);
+      throw error;
     }
+  }, [dispatch]);
 
-    await loadTokens([contractInstances.dai, contractInstances.weth],dispatch)
-
-    return contractInstances
-
-    },[dispatch])
-
-  useEffect( () => {
-    fetchBlockChainData().then(contracts => {
+  useEffect(() => {
+    fetchBlockchainData()
+      .then((contracts) => {
         setContracts(contracts);
-        console.log('contracts',contracts)
+        console.log('Contracts:', contracts);
+      })
+      .catch((error) => {
+        console.error('Error fetching blockchain data:', error);
       });
-}, [fetchBlockChainData]);
+  }, [fetchBlockchainData]);
 
   return (
     <ContractsContext.Provider value={contracts}>
@@ -71,3 +72,4 @@ export function ContractsProvider({ children })  {
     </ContractsContext.Provider>
   );
 }
+

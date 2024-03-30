@@ -1,134 +1,43 @@
-import { ethers } from 'ethers'
+import { Keypair } from '@solana/web3.js';
+import { setNetwork, setAccount, setProvider } from './reducers/provider';
 
-import {
-  setProvider,
-  setNetwork,
-  setAccount
-} from './reducers/provider'
+export const loadNetwork = async (connection, dispatch) => {
+  try {
+    const { solanaVersion } = await connection.getVersion();
+    dispatch(setNetwork(solanaVersion));
+    return solanaVersion;
+  } catch (error) {
+    console.error('Error fetching network version:', error);
+    throw error;
+  }
+};
+export const swap = async (provider, contracts, path, router, amount, minAmountOut, slippage, deadline, dispatch) => {
+  // Swap fonksiyonunun içeriği
+};
 
-import {
-  setSymbols,
-  //balancesLoaded
-} from './reducers/tokens'
-
-import {
-  // swapsLoaded,
-  setIsSwapping,
-  setSwapSuccess,
-  setSwapFail
-} from './reducers/aggregator'
-
-
-export const loadProvider = (provider, dispatch) => {
-  dispatch(setProvider(provider))
-
-  return provider
-}
-
-export const loadNetwork = async (provider, dispatch) => {
-  const { chainId } = await provider.getNetwork()
-  dispatch(setNetwork(chainId.toString()))
-
-  return chainId
-}
-
-export const loadAccount = async (dispatch) => {
-  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
-  const account = ethers.getAddress(accounts[0])
-  dispatch(setAccount(account))
-
-  return account
-}
-
-// ------------------------------------------------------------------------------
-// LOAD CONTRACTS
+export const loadAccount = async (connection, dispatch) => {
+  try {
+    const keypair = Keypair.generate(); // Yeni bir anahtar çifti oluştur
+    const account = keypair.publicKey.toBase58(); // Hesap adresini al
+    dispatch(setAccount(account));
+    return account;
+  } catch (error) {
+    console.error('Error fetching account:', error);
+    throw error;
+  }
+};
 
 export const loadTokens = async (erc20s, dispatch) => {
-  console.log("load tokens called")
-  let symbols = new Map()
-  let i = 0
-  for (i=0; i < erc20s.length; i++){
-    symbols.set(await erc20s[i].symbol(), await erc20s[i].getAddress())
-  }
-  dispatch(setSymbols(symbols))
-  console.log('symbols:', symbols)
-  return symbols
-
-}
-
-
-// export const fetchTokens = (contracts) => {
-//   return async dispatch => {
-//     try {
-//       dispatch(setSymbols([await contracts.dai.symbol(), await contracts.weth.symbol()]))
-//     } catch (error) {
-//       console.error('Error fetching tokens info: ', error);
-//       // Optionally dispatch an error action
-//       // dispatch(fetchDataError(error));
-//     }
-//   };
-// };
-
-
-// ------------------------------------------------------------------------------
-// LOAD BALANCES
-
-// export const loadBalances = async (tokens, account, dispatch) => {
-//   const balance1 = await tokens[0].balanceOf(account)
-//   const balance2 = await tokens[1].balanceOf(account)
-
-//   dispatch(balancesLoaded([
-//     ethers.formatUnits(balance1.toString(), 'ether'),
-//     ethers.formatUnits(balance2.toString(), 'ether')
-//   ]))
-
-// }
-
-// ------------------------------------------------------------------------------
-// SWAP
-
- export const swap = async (provider, contracts, path, router, amount, minAmountOut, slippage, deadline, dispatch) => {
-
-  try{
-     dispatch(setIsSwapping(true))
-
-     let transaction
-     const signer = await provider.getSigner()
-
-     transaction = await contracts.dai.connect(signer).approve(contracts.aggregator.getAddress(), amount)
-     await transaction.wait()
-
-     transaction = await contracts.aggregator.connect(signer)
-       .swapOnUniswapFork(
-        path,
-        router,
-        amount,
-        minAmountOut,
-        slippage,
-        deadline
-        )
-
-     await transaction.wait()
-
-     dispatch(setSwapSuccess(transaction.hash))
-
+  try {
+    let symbols = new Map();
+    for (let i = 0; i < erc20s.length; i++) {
+      symbols.set(await erc20s[i].symbol(), await erc20s[i].getAddress());
+    }
+    dispatch(setProvider(symbols));
+    console.log('symbols:', symbols);
+    return symbols;
   } catch (error) {
-    dispatch(setSwapFail())
+    console.error('Error loading tokens:', error);
+    throw error;
   }
-}
-
-
-// ------------------------------------------------------------------------------
-// LOAD ALL SWAPS
-
-// export const loadAllSwaps = async (provider, aggregator, dispatch) => {
-//   const block = await provider.getBlockNumber()
-
-//   const swapStream = await aggregator.queryFilter('Swap', 0, block)
-
-//   const swaps = swapStream.map(event => {
-//     return { hash: event.transactionHash, args: event.args }
-//   })
-
-//   dispatch(swapsLoaded(swaps))
-// }
+};

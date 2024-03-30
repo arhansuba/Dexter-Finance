@@ -1,0 +1,27 @@
+[
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_param1",
+          "type": "uint256"
+        },
+        {
+          "name": "_param2",
+          "type": "address"
+        }
+      ],
+      "name": "exampleFunction",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+    
+  ]
+  
