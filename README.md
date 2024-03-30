@@ -1,6 +1,6 @@
-# Dex Aggregator for Uniswap Forks
+# Dexter - Solana DEX Aggregator
 
-An easy-to-use DEX aggregator that interacts with various Uniswap forks. Find the best trading rates and liquidity, and maximize your DeFi experience.
+Dexter is an open-source DEX aggregator built on the Solana blockchain, utilizing the Orca Whirl Pools for liquidity aggregation. With Dexter, you can discover the best trading rates and liquidity across various decentralized exchanges on the Solana network.
 
 ## Table of Contents
 
@@ -15,15 +15,16 @@ An easy-to-use DEX aggregator that interacts with various Uniswap forks. Find th
 
 ## Features
 
-- **Best Rate Discovery:** Automatically discover the best rates across multiple DEXes.
-- **Low Slippage:** Our system minimizes trade slippage by splitting trades across multiple liquidity pools.
-- **Gas Efficiency:** Optimized contract calls ensure you save on gas costs.
-- **Easy Integration:** Designed to be integrated with dApps, wallets, and other platforms.
+- **Best Rate Discovery:** Dexter automatically discovers the best rates across multiple DEXes on the Solana network.
+- **Liquidity Aggregation:** Utilizing Orca Whirl Pools, Dexter aggregates liquidity to provide optimal trading experiences.
+- **Low Slippage:** Our system minimizes trade slippage by optimizing trades across multiple liquidity pools.
+- **Gas Efficiency:** Since it operates on the Solana blockchain, Dexter ensures low transaction costs and high throughput.
+- **Easy Integration:** Dexter is designed to be integrated with dApps, wallets, and other platforms on the Solana network.
 
 ## Prerequisites
 
 - Node.js version `14.x` or higher
-- Ethereum wallet with some ETH for transaction fees
+- Solana wallet with SOL for transaction fees
 
 ## Installation
 
@@ -34,9 +35,14 @@ An easy-to-use DEX aggregator that interacts with various Uniswap forks. Find th
 npm install
 **
 
+If you encounter any errors during installation, you can force install by running:
+**
+npm install --force
+**
+
 ## Usage
 
-1. Update the `.env` file with your Ethereum gateway provider's API key.
+1. Update the `.env` file with your Solana gateway provider's API key.
 
 2. Start the application: npm run start
 
@@ -44,15 +50,15 @@ npm install
 
 ## Supported DEXes
 
-- Uniswap V2
-- Sushiswap
-- Mode DEXs to come...
+- Orca
+- Uniswap (included for comparison purposes)
+- More DEXes to be supported in future updates...
 
 Want to add support for another DEX? Check the [contributing guidelines](#contributing).
 
 ## Contributing
 
-We welcome contributions to improve this aggregator. Please follow the steps below:
+We welcome contributions to improve Dexter. Please follow the steps below:
 
 1. Fork the repository.
 2. Create a new branch (`git checkout -b feature/YourFeature`).
@@ -60,16 +66,17 @@ We welcome contributions to improve this aggregator. Please follow the steps bel
 4. Push to the branch (`git push origin feature/YourFeature`).
 5. Open a new Pull Request.
 
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE.md) file for details.
 
 ## Acknowledgements
 
-- Thanks to all the Uniswap forks for creating such versatile platforms.
-- The Ethereum community for invaluable tools and resources.
+- Thanks to Orca for providing the Whirl Pools liquidity aggregation service.
+- The Solana community for creating a powerful blockchain platform.
+- Uniswap for inspiration and comparison purposes.
 
 ---
 
-Happy trading! If you have any issues, please [raise an issue](https://github.com/gregsio/dex-aggregator/issues)
+Happy trading on Solana! If you have any issues, please [raise an issue](https://github.com/arhansuba/Dexter-Finance/issues)
+
